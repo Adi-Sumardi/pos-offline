@@ -1,6 +1,6 @@
 import { useState, useRef } from 'react';
-import { View, StyleSheet, Vibration, TouchableOpacity } from 'react-native';
-import { Text, Portal, Modal, Button, Icon } from 'react-native-paper';
+import { View, StyleSheet, Vibration, TouchableOpacity, TouchableWithoutFeedback, Modal } from 'react-native';
+import { Text, Button, Icon } from 'react-native-paper';
 import { CameraView, useCameraPermissions } from 'expo-camera';
 import { searchBySku } from '@/db/queries/products';
 import { Colors, Spacing, Radius, FontSize } from '@/constants/theme';
@@ -11,7 +11,6 @@ interface Props {
   onFound: (product: Product) => void;
   onNotFound: (sku: string) => void;
   onDismiss: () => void;
-  // Mode cek harga: tidak tambah ke keranjang, hanya tampilkan info
   priceCheckMode?: boolean;
 }
 
@@ -36,7 +35,6 @@ export default function ScannerModal({ visible, onFound, onNotFound, onDismiss, 
         onNotFound(data);
       }
     } finally {
-      // Reset setelah 2 detik untuk multi-scan
       setTimeout(() => {
         cooldownRef.current = false;
         setScanning(true);
@@ -47,73 +45,112 @@ export default function ScannerModal({ visible, onFound, onNotFound, onDismiss, 
   if (!permission) return null;
 
   return (
-    <Portal>
-      <Modal visible={visible} onDismiss={onDismiss} contentContainerStyle={styles.container}>
-        <View style={styles.header}>
-          <Text style={styles.title}>
-            {priceCheckMode ? 'Cek Harga' : 'Scan Produk'}
-          </Text>
-          <TouchableOpacity onPress={onDismiss}>
-            <Icon source="close" size={24} color={Colors.textPrimary} />
-          </TouchableOpacity>
-        </View>
-
-        {!permission.granted ? (
-          <View style={styles.permWrap}>
-            <Text style={styles.permText}>Izin kamera diperlukan untuk scan QR/Barcode</Text>
-            <Button mode="contained" onPress={requestPermission} buttonColor={Colors.primary}>
-              Izinkan Kamera
-            </Button>
-          </View>
-        ) : (
-          <View style={styles.cameraWrap}>
-            <CameraView
-              style={styles.camera}
-              barcodeScannerSettings={{
-                barcodeTypes: ['qr', 'ean13', 'ean8', 'code128', 'code39', 'pdf417'],
-              }}
-              onBarcodeScanned={scanning ? handleBarcodeScan : undefined}
-            >
-              {/* Overlay frame */}
-              <View style={styles.overlay}>
-                <View style={styles.frame}>
-                  <View style={[styles.corner, styles.topLeft]} />
-                  <View style={[styles.corner, styles.topRight]} />
-                  <View style={[styles.corner, styles.bottomLeft]} />
-                  <View style={[styles.corner, styles.bottomRight]} />
-                </View>
-                <Text style={styles.hint}>
-                  Arahkan kamera ke QR Code atau Barcode{'\n'}pada label / kotak penyimpanan
+    <Modal
+      visible={visible}
+      transparent
+      animationType="fade"
+      onRequestClose={onDismiss}
+      statusBarTranslucent
+    >
+      <TouchableWithoutFeedback onPress={onDismiss}>
+        <View style={styles.backdrop}>
+          <TouchableWithoutFeedback>
+            <View style={styles.container}>
+              {/* Header */}
+              <View style={styles.header}>
+                <Text style={styles.title}>
+                  {priceCheckMode ? 'Cek Harga' : 'Scan Produk'}
                 </Text>
+                <TouchableOpacity onPress={onDismiss} style={styles.closeBtn}>
+                  <Icon source="close" size={18} color={Colors.textSecondary} />
+                </TouchableOpacity>
               </View>
-            </CameraView>
-          </View>
-        )}
 
-        <Button mode="outlined" onPress={onDismiss} style={styles.cancelBtn}>
-          Tutup
-        </Button>
-      </Modal>
-    </Portal>
+              {!permission.granted ? (
+                <View style={styles.permWrap}>
+                  <Text style={styles.permText}>Izin kamera diperlukan untuk scan QR/Barcode</Text>
+                  <Button mode="contained" onPress={requestPermission} buttonColor={Colors.primary}>
+                    Izinkan Kamera
+                  </Button>
+                </View>
+              ) : (
+                <View style={styles.cameraWrap}>
+                  <CameraView
+                    style={styles.camera}
+                    barcodeScannerSettings={{
+                      barcodeTypes: ['qr', 'ean13', 'ean8', 'code128', 'code39', 'pdf417'],
+                    }}
+                    onBarcodeScanned={scanning ? handleBarcodeScan : undefined}
+                  >
+                    <View style={styles.overlay}>
+                      <View style={styles.frame}>
+                        <View style={[styles.corner, styles.topLeft]} />
+                        <View style={[styles.corner, styles.topRight]} />
+                        <View style={[styles.corner, styles.bottomLeft]} />
+                        <View style={[styles.corner, styles.bottomRight]} />
+                      </View>
+                      <Text style={styles.hint}>
+                        {priceCheckMode
+                          ? 'Arahkan kamera ke QR Code produk\nuntuk melihat informasi harga'
+                          : 'Arahkan kamera ke QR Code atau Barcode\npada label / kotak penyimpanan'}
+                      </Text>
+                    </View>
+                  </CameraView>
+                </View>
+              )}
+
+              {/* Button Tutup */}
+              <View style={styles.btnWrap}>
+                <Button
+                  mode="outlined"
+                  onPress={onDismiss}
+                  style={styles.cancelBtn}
+                  contentStyle={{ paddingVertical: 4 }}
+                >
+                  Tutup
+                </Button>
+              </View>
+            </View>
+          </TouchableWithoutFeedback>
+        </View>
+      </TouchableWithoutFeedback>
+    </Modal>
   );
 }
 
 const CORNER = 24;
 
 const styles = StyleSheet.create({
+  backdrop: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: Spacing.md,
+  },
   container: {
     backgroundColor: Colors.surface,
-    margin: Spacing.md,
     borderRadius: Radius.xl,
     overflow: 'hidden',
+    width: '100%',
+    maxWidth: 420,
     maxHeight: '80%',
   },
   header: {
-    flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center',
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
     padding: Spacing.lg,
-    paddingBottom: Spacing.md,
   },
-  title: { fontSize: FontSize.lg, fontWeight: '700' },
+  title: { fontSize: FontSize.lg, fontWeight: '700', color: Colors.textPrimary },
+  closeBtn: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: Colors.surfaceVariant,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
   cameraWrap: { height: 300 },
   camera: { flex: 1 },
   overlay: { flex: 1, alignItems: 'center', justifyContent: 'center' },
@@ -135,5 +172,6 @@ const styles = StyleSheet.create({
   },
   permWrap: { padding: Spacing.xl, alignItems: 'center', gap: Spacing.md },
   permText: { textAlign: 'center', color: Colors.textSecondary },
-  cancelBtn: { margin: Spacing.md, borderRadius: Radius.md },
+  btnWrap: { padding: Spacing.lg, paddingTop: Spacing.md },
+  cancelBtn: { borderRadius: Radius.md },
 });

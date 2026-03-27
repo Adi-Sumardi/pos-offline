@@ -118,12 +118,8 @@ export default function POSScreen() {
       setPriceCheckProduct(product);
       return;
     }
-    if (product.unitType === 'piece' && product.qtyStep === 1) {
-      // Langsung tambah qty 1
-      cart.addItem(product, 1);
-    } else {
-      setQtyProduct(product);
-    }
+    // Selalu tampilkan QtyModal untuk konfirmasi
+    setQtyProduct(product);
   }
 
   function onQtyConfirm(qty: number) {

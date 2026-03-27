@@ -1,5 +1,5 @@
-import { View, StyleSheet } from 'react-native';
-import { Text, Portal, Modal, Button, Divider, Chip } from 'react-native-paper';
+import { View, StyleSheet, Modal, TouchableOpacity, TouchableWithoutFeedback } from 'react-native';
+import { Text, Button, Divider, Icon } from 'react-native-paper';
 import { formatRupiah, formatQty } from '@/utils/currency';
 import { Colors, Spacing, Radius, FontSize } from '@/constants/theme';
 import type { Product } from '@/db/schema';
@@ -20,65 +20,102 @@ export default function PriceCheckModal({ visible, product, onDismiss, onAddToCa
     Colors.success;
 
   return (
-    <Portal>
-      <Modal visible={visible} onDismiss={onDismiss} contentContainerStyle={styles.container}>
-        <View style={styles.handle} />
-        <Text style={styles.label}>Cek Harga Produk</Text>
-        <Text style={styles.name}>{product.name}</Text>
-        {product.brand && <Text style={styles.brand}>{product.brand}</Text>}
-        <Text style={styles.sku}>{product.sku}</Text>
+    <Modal
+      visible={visible}
+      transparent
+      animationType="fade"
+      onRequestClose={onDismiss}
+      statusBarTranslucent
+    >
+      <TouchableWithoutFeedback onPress={onDismiss}>
+        <View style={styles.backdrop}>
+          <TouchableWithoutFeedback>
+            <View style={styles.container}>
+              {/* Handle */}
+              <View style={styles.handle} />
 
-        <Divider style={styles.divider} />
+              {/* Header */}
+              <View style={styles.headerRow}>
+                <Text style={styles.label}>CEK HARGA</Text>
+                <TouchableOpacity onPress={onDismiss} style={styles.closeBtn}>
+                  <Icon source="close" size={18} color={Colors.textSecondary} />
+                </TouchableOpacity>
+              </View>
 
-        <View style={styles.priceRow}>
-          <Text style={styles.priceLabel}>Harga Jual</Text>
-          <Text style={styles.price}>{formatRupiah(product.price)}</Text>
+              {/* Product Info */}
+              <Text style={styles.name}>{product.name}</Text>
+              {product.brand && <Text style={styles.brand}>{product.brand}</Text>}
+              <Text style={styles.sku}>{product.sku}</Text>
+
+              {/* Price Highlight */}
+              <View style={styles.priceCard}>
+                <Text style={styles.priceLabel}>Harga Jual</Text>
+                <Text style={styles.price}>{formatRupiah(product.price)}</Text>
+              </View>
+
+              {/* Info Rows */}
+              <View style={styles.infoSection}>
+                <View style={styles.infoRow}>
+                  <Text style={styles.infoLabel}>Stok Tersedia</Text>
+                  <Text style={[styles.infoVal, { color: stockColor, fontWeight: '700' }]}>
+                    {formatQty(product.stock, product.unit)}
+                  </Text>
+                </View>
+
+                {product.location && (
+                  <View style={styles.infoRow}>
+                    <Text style={styles.infoLabel}>Lokasi Rak</Text>
+                    <Text style={styles.infoVal}>📍 {product.location}</Text>
+                  </View>
+                )}
+              </View>
+
+              {/* Actions */}
+              <View style={styles.btnRow}>
+                <Button
+                  mode="outlined"
+                  onPress={onDismiss}
+                  style={styles.btn}
+                  contentStyle={styles.btnContent}
+                >
+                  Tutup
+                </Button>
+                {product.stock > 0 && (
+                  <Button
+                    mode="contained"
+                    onPress={() => { onAddToCart(product); onDismiss(); }}
+                    style={[styles.btn, { marginLeft: 8 }]}
+                    buttonColor={Colors.primary}
+                    icon="cart-plus"
+                    contentStyle={styles.btnContent}
+                  >
+                    Tambah
+                  </Button>
+                )}
+              </View>
+            </View>
+          </TouchableWithoutFeedback>
         </View>
-
-        <View style={styles.priceRow}>
-          <Text style={styles.stockLabel}>Stok Tersedia</Text>
-          <Text style={[styles.stock, { color: stockColor }]}>
-            {formatQty(product.stock, product.unit)}
-          </Text>
-        </View>
-
-        {product.location && (
-          <View style={styles.priceRow}>
-            <Text style={styles.stockLabel}>Lokasi Rak</Text>
-            <Text style={styles.stockLabel}>📍 {product.location}</Text>
-          </View>
-        )}
-
-        <Divider style={styles.divider} />
-
-        <View style={styles.btnRow}>
-          <Button mode="outlined" onPress={onDismiss} style={{ flex: 1 }}>
-            Tutup
-          </Button>
-          {product.stock > 0 && (
-            <Button
-              mode="contained"
-              onPress={() => { onAddToCart(product); onDismiss(); }}
-              style={{ flex: 1, marginLeft: 8 }}
-              buttonColor={Colors.primary}
-              icon="cart-plus"
-            >
-              Tambah
-            </Button>
-          )}
-        </View>
-      </Modal>
-    </Portal>
+      </TouchableWithoutFeedback>
+    </Modal>
   );
 }
 
 const styles = StyleSheet.create({
+  backdrop: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: Spacing.lg,
+  },
   container: {
     backgroundColor: Colors.surface,
-    margin: Spacing.xl,
     borderRadius: Radius.xl,
     padding: Spacing.lg,
-    paddingTop: Spacing.sm,
+    paddingTop: Spacing.lg,
+    width: '100%',
+    maxWidth: 400,
   },
   handle: {
     width: 40,
@@ -86,17 +123,67 @@ const styles = StyleSheet.create({
     borderRadius: 2,
     backgroundColor: Colors.border,
     alignSelf: 'center',
-    marginBottom: Spacing.md,
+    marginBottom: Spacing.lg,
   },
-  label: { fontSize: FontSize.xs, color: Colors.textHint, textTransform: 'uppercase', letterSpacing: 1 },
-  name: { fontSize: FontSize.xl, fontWeight: '800', color: Colors.textPrimary, marginTop: Spacing.xs },
+  headerRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: Spacing.sm,
+  },
+  label: {
+    fontSize: FontSize.xs,
+    color: Colors.textHint,
+    letterSpacing: 1.5,
+    fontWeight: '700',
+  },
+  closeBtn: {
+    width: 30,
+    height: 30,
+    borderRadius: 15,
+    backgroundColor: Colors.surfaceVariant,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  name: {
+    fontSize: FontSize.xl,
+    fontWeight: '800',
+    color: Colors.textPrimary,
+    marginBottom: 2,
+  },
   brand: { fontSize: FontSize.sm, color: Colors.textSecondary },
-  sku: { fontSize: FontSize.xs, color: Colors.textHint, marginTop: 4 },
-  divider: { marginVertical: Spacing.md },
-  priceRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: Spacing.sm },
-  priceLabel: { fontSize: FontSize.md, color: Colors.textSecondary },
-  price: { fontSize: FontSize.xxl, fontWeight: '800', color: Colors.primary },
-  stockLabel: { fontSize: FontSize.sm, color: Colors.textSecondary },
-  stock: { fontSize: FontSize.lg, fontWeight: '700' },
-  btnRow: { flexDirection: 'row', marginTop: Spacing.sm },
+  sku: { fontSize: FontSize.xs, color: Colors.textHint, marginTop: 2 },
+  priceCard: {
+    backgroundColor: Colors.primarySoft,
+    borderRadius: Radius.md,
+    padding: Spacing.md,
+    marginTop: Spacing.md,
+    alignItems: 'center',
+  },
+  priceLabel: {
+    fontSize: FontSize.xs,
+    color: Colors.primary,
+    fontWeight: '600',
+    marginBottom: 4,
+  },
+  price: {
+    fontSize: FontSize.xxxl,
+    fontWeight: '900',
+    color: Colors.primary,
+  },
+  infoSection: {
+    marginTop: Spacing.md,
+    marginBottom: Spacing.sm,
+  },
+  infoRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingVertical: Spacing.xs,
+  },
+  infoLabel: { fontSize: FontSize.sm, color: Colors.textSecondary },
+  infoVal: { fontSize: FontSize.sm, color: Colors.textPrimary },
+  btnRow: { flexDirection: 'row', marginTop: Spacing.md },
+  btn: { flex: 1, borderRadius: Radius.md },
+  btnContent: { paddingVertical: 4 },
 });

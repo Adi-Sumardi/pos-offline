@@ -1,5 +1,5 @@
-import { View, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
-import { Text, Portal, Modal, Button, Icon, Divider } from 'react-native-paper';
+import { View, StyleSheet, TouchableOpacity, ScrollView, TouchableWithoutFeedback, Modal } from 'react-native';
+import { Text, Button, Icon, Divider } from 'react-native-paper';
 import { formatRupiah } from '@/utils/currency';
 import { Colors, Spacing, Radius, FontSize } from '@/constants/theme';
 import type { Discount } from '@/db/schema';
@@ -24,111 +24,116 @@ export default function DiscountModal({ visible, discounts, selected, subtotal, 
   }
 
   return (
-    <Portal>
-      <Modal visible={visible} onDismiss={onDismiss} contentContainerStyle={styles.modal}>
-        {/* Handle */}
-        <View style={styles.handle} />
+    <Modal
+      visible={visible}
+      transparent
+      animationType="fade"
+      onRequestClose={onDismiss}
+      statusBarTranslucent
+    >
+      <TouchableWithoutFeedback onPress={onDismiss}>
+        <View style={styles.backdrop}>
+          <TouchableWithoutFeedback>
+            <View style={styles.container}>
+              {/* Header row */}
+              <View style={styles.row}>
+                <Text style={styles.title}>Pilih Diskon</Text>
+                <TouchableOpacity onPress={onDismiss} style={styles.closeBtn}>
+                  <Icon source="close" size={18} color={Colors.textSecondary} />
+                </TouchableOpacity>
+              </View>
+              <Text style={styles.sub}>Subtotal: {formatRupiah(subtotal)}</Text>
 
-        {/* Header row */}
-        <View style={styles.row}>
-          <Text style={styles.title}>Pilih Diskon</Text>
-          <TouchableOpacity onPress={onDismiss} style={styles.closeBtn}>
-            <Icon source="close" size={18} color={Colors.textSecondary} />
-          </TouchableOpacity>
-        </View>
-        <Text style={styles.sub}>Subtotal: {formatRupiah(subtotal)}</Text>
+              <Divider style={{ marginVertical: Spacing.md }} />
 
-        <Divider style={{ marginVertical: Spacing.md }} />
-
-        {/* List */}
-        {discounts.length === 0 ? (
-          <View style={styles.empty}>
-            <Text style={styles.emptyText}>Tidak ada diskon aktif</Text>
-          </View>
-        ) : (
-          <ScrollView showsVerticalScrollIndicator={false} style={{ maxHeight: 300 }}>
-            {discounts.map((item, idx) => {
-              const disc = calcDiscount(item);
-              const isSelected = selected?.id === item.id;
-              const canApply = subtotal >= item.minPurchase;
-
-              return (
-                <View key={item.id}>
-                  {idx > 0 && <Divider />}
-                  <TouchableOpacity
-                    onPress={() => { onSelect(isSelected ? null : item); onDismiss(); }}
-                    disabled={!canApply}
-                    activeOpacity={0.6}
-                    style={[styles.item, !canApply && { opacity: 0.4 }]}
-                  >
-                    {/* Check icon or empty circle */}
-                    <View style={[styles.radio, isSelected && styles.radioSelected]}>
-                      {isSelected && <Icon source="check" size={14} color="#fff" />}
-                    </View>
-
-                    {/* Info */}
-                    <View style={{ flex: 1 }}>
-                      <Text style={[styles.itemName, isSelected && { color: Colors.primary }]}>
-                        {item.name}
-                      </Text>
-                      <Text style={styles.itemDesc}>
-                        {item.type === 'percentage' ? `${item.value}%` : formatRupiah(item.value)}
-                        {item.maxDiscount ? `  ·  Maks ${formatRupiah(item.maxDiscount)}` : ''}
-                      </Text>
-                      {item.minPurchase > 0 && !canApply && (
-                        <Text style={styles.itemWarn}>
-                          Min. belanja {formatRupiah(item.minPurchase)}
-                        </Text>
-                      )}
-                    </View>
-
-                    {/* Discount amount */}
-                    {canApply && disc > 0 && (
-                      <Text style={styles.itemAmount}>−{formatRupiah(disc)}</Text>
-                    )}
-                  </TouchableOpacity>
+              {/* List */}
+              {discounts.length === 0 ? (
+                <View style={styles.empty}>
+                  <Text style={styles.emptyText}>Tidak ada diskon aktif</Text>
                 </View>
-              );
-            })}
-          </ScrollView>
-        )}
+              ) : (
+                <ScrollView showsVerticalScrollIndicator={false} style={{ maxHeight: 300 }}>
+                  {discounts.map((item, idx) => {
+                    const disc = calcDiscount(item);
+                    const isSelected = selected?.id === item.id;
+                    const canApply = subtotal >= item.minPurchase;
 
-        {/* Footer */}
-        <View style={styles.footer}>
-          {selected && (
-            <Button
-              mode="text"
-              textColor={Colors.danger}
-              onPress={() => { onSelect(null); onDismiss(); }}
-              compact
-            >
-              Hapus Diskon
-            </Button>
-          )}
-          <Button mode="contained" onPress={onDismiss} buttonColor={Colors.primary} style={{ borderRadius: Radius.md }}>
-            Selesai
-          </Button>
+                    return (
+                      <View key={item.id}>
+                        {idx > 0 && <Divider />}
+                        <TouchableOpacity
+                          onPress={() => { onSelect(isSelected ? null : item); onDismiss(); }}
+                          disabled={!canApply}
+                          activeOpacity={0.6}
+                          style={[styles.item, !canApply && { opacity: 0.4 }]}
+                        >
+                          <View style={[styles.radio, isSelected && styles.radioSelected]}>
+                            {isSelected && <Icon source="check" size={14} color="#fff" />}
+                          </View>
+
+                          <View style={{ flex: 1 }}>
+                            <Text style={[styles.itemName, isSelected && { color: Colors.primary }]}>
+                              {item.name}
+                            </Text>
+                            <Text style={styles.itemDesc}>
+                              {item.type === 'percentage' ? `${item.value}%` : formatRupiah(item.value)}
+                              {item.maxDiscount ? `  ·  Maks ${formatRupiah(item.maxDiscount)}` : ''}
+                            </Text>
+                            {item.minPurchase > 0 && !canApply && (
+                              <Text style={styles.itemWarn}>
+                                Min. belanja {formatRupiah(item.minPurchase)}
+                              </Text>
+                            )}
+                          </View>
+
+                          {canApply && disc > 0 && (
+                            <Text style={styles.itemAmount}>−{formatRupiah(disc)}</Text>
+                          )}
+                        </TouchableOpacity>
+                      </View>
+                    );
+                  })}
+                </ScrollView>
+              )}
+
+              {/* Footer */}
+              <View style={styles.footer}>
+                {selected && (
+                  <Button
+                    mode="text"
+                    textColor={Colors.danger}
+                    onPress={() => { onSelect(null); onDismiss(); }}
+                    compact
+                  >
+                    Hapus Diskon
+                  </Button>
+                )}
+                <Button mode="contained" onPress={onDismiss} buttonColor={Colors.primary} style={{ borderRadius: Radius.md }}>
+                  Selesai
+                </Button>
+              </View>
+            </View>
+          </TouchableWithoutFeedback>
         </View>
-      </Modal>
-    </Portal>
+      </TouchableWithoutFeedback>
+    </Modal>
   );
 }
 
 const styles = StyleSheet.create({
-  modal: {
-    backgroundColor: Colors.surface,
-    marginHorizontal: 24,
-    borderRadius: Radius.xl,
-    padding: 20,
-    paddingTop: Spacing.sm,
+  backdrop: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: Spacing.lg,
   },
-  handle: {
-    width: 40,
-    height: 4,
-    borderRadius: 2,
-    backgroundColor: Colors.border,
-    alignSelf: 'center',
-    marginBottom: Spacing.md,
+  container: {
+    backgroundColor: Colors.surface,
+    borderRadius: Radius.xl,
+    padding: Spacing.lg,
+    width: '100%',
+    maxWidth: 420,
   },
   row: {
     flexDirection: 'row',
@@ -146,9 +151,9 @@ const styles = StyleSheet.create({
     marginTop: 4,
   },
   closeBtn: {
-    width: 30,
-    height: 30,
-    borderRadius: 15,
+    width: 32,
+    height: 32,
+    borderRadius: 16,
     backgroundColor: Colors.surfaceVariant,
     alignItems: 'center',
     justifyContent: 'center',
