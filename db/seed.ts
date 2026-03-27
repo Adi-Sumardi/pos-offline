@@ -113,6 +113,4 @@ export async function seedDefaultData() {
   }
 
   console.log('[Seed] Data awal berhasil dibuat.');
-  console.log('[Seed] Admin: username=admin pin=123456');
-  console.log('[Seed] Kasir: username=kasir1 pin=000000');
 }

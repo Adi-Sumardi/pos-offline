@@ -7,7 +7,7 @@ import { Text, TextInput, Button, HelperText, Surface } from 'react-native-paper
 import { router } from 'expo-router';
 import { getDb } from '@/db/index';
 import { users } from '@/db/schema';
-import { eq } from 'drizzle-orm';
+import { eq, sql } from 'drizzle-orm';
 import { verifyPin } from '@/db/seed';
 import { useAuthStore } from '@/stores/useAuthStore';
 import { Colors, Spacing, Radius, FontSize, Shadow } from '@/constants/theme';
@@ -72,10 +72,11 @@ export default function LoginScreen() {
     setError('');
     try {
       const db = getDb();
+      const normalizedUsername = username.trim().toLowerCase();
       const result = await db
         .select()
         .from(users)
-        .where(eq(users.username, username.trim().toLowerCase()))
+        .where(sql`LOWER(${users.username}) = ${normalizedUsername}`)
         .limit(1);
 
       const user = result[0];
@@ -193,9 +194,6 @@ export default function LoginScreen() {
               Masuk
             </Button>
 
-            <Text style={styles.hint}>
-              Admin: admin / 123456{'\n'}Kasir: kasir1 / 000000
-            </Text>
           </Surface>
         </Animated.View>
       </View>
@@ -283,11 +281,4 @@ const styles = StyleSheet.create({
     letterSpacing: 0.5,
   },
 
-  hint: {
-    marginTop: Spacing.lg,
-    textAlign: 'center',
-    fontSize: FontSize.xs,
-    color: Colors.textHint,
-    lineHeight: 18,
-  },
 });

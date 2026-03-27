@@ -74,7 +74,16 @@ export const useCartStore = create<CartState>((set, get) => ({
   },
 
   removeItem: (productId: number) => {
-    set({ items: get().items.filter((i) => i.product.id !== productId) });
+    const newItems = get().items.filter((i) => i.product.id !== productId);
+    const discount = get().discount;
+
+    // Hapus diskon product-scoped jika produk target dihapus dari cart
+    if (discount?.scope === 'product' && discount.scopeId === productId) {
+      set({ items: newItems, discount: null, discountAmount: 0 });
+      return;
+    }
+
+    set({ items: newItems });
     get()._recalcDiscount();
   },
 

@@ -1,5 +1,5 @@
 import { eq } from 'drizzle-orm';
-import { getDb } from '../index';
+import { getDb, getSqliteDb } from '../index';
 import { discounts } from '../schema';
 import type { NewProduct } from '../schema';
 
@@ -53,5 +53,22 @@ export async function updateDiscount(
 
 export async function deleteDiscount(id: number) {
   const db = getDb();
+  const sqlite = getSqliteDb();
+
+  // Cek apakah diskon sudah dipakai di transaksi
+  const usage = await sqlite.getFirstAsync<{ count: number }>(
+    `SELECT COUNT(*) as count FROM transactions WHERE discount_id = ?`,
+    [id]
+  );
+
+  if (usage && usage.count > 0) {
+    // Sudah dipakai: nonaktifkan saja (soft delete) agar history transaksi tetap valid
+    await db.update(discounts)
+      .set({ isActive: false, updatedAt: new Date().toISOString() })
+      .where(eq(discounts.id, id));
+    return { softDeleted: true };
+  }
+
   await db.delete(discounts).where(eq(discounts.id, id));
+  return { softDeleted: false };
 }

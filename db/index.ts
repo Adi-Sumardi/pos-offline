@@ -41,7 +41,8 @@ export async function initDatabase() {
   // Enable foreign keys
   await _sqliteDb.execAsync('PRAGMA foreign_keys = ON;');
 
-  // Create all tables
+  // Create all tables and indexes
+  try {
   await _sqliteDb.execAsync(`
     CREATE TABLE IF NOT EXISTS users (
       id          INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -217,7 +218,22 @@ export async function initDatabase() {
       key   TEXT PRIMARY KEY,
       value TEXT
     );
+
+    CREATE INDEX IF NOT EXISTS idx_transactions_trx_code ON transactions(trx_code);
+    CREATE INDEX IF NOT EXISTS idx_transactions_created_at ON transactions(created_at);
+    CREATE INDEX IF NOT EXISTS idx_transactions_cashier_id ON transactions(cashier_id);
+    CREATE INDEX IF NOT EXISTS idx_transactions_status ON transactions(status);
+    CREATE INDEX IF NOT EXISTS idx_products_sku ON products(sku);
+    CREATE INDEX IF NOT EXISTS idx_products_is_active ON products(is_active);
+    CREATE INDEX IF NOT EXISTS idx_customers_phone ON customers(phone);
+    CREATE INDEX IF NOT EXISTS idx_customers_member_code ON customers(member_code);
+    CREATE INDEX IF NOT EXISTS idx_stock_logs_product_id ON stock_logs(product_id);
+    CREATE INDEX IF NOT EXISTS idx_debt_payments_customer_id ON debt_payments(customer_id);
   `);
+  } catch (e: any) {
+    _sqliteDb = null;
+    throw new Error(`Gagal inisialisasi tabel database: ${e.message}`);
+  }
 
   _db = drizzle(_sqliteDb, { schema });
 

@@ -79,8 +79,11 @@ export default function QtyModal({ visible, product, onConfirm, onDismiss }: Pro
                 <TextInput
                   value={String(qty)}
                   onChangeText={(t) => {
-                    const n = parseFloat(t);
-                    if (!isNaN(n) && n > 0 && n <= product.stock) setQty(n);
+                    const raw = parseFloat(t);
+                    if (isNaN(raw)) return;
+                    // Bulatkan ke 3 desimal untuk menghindari floating-point error
+                    const n = Math.round(raw * 1000) / 1000;
+                    if (n > 0 && n <= product.stock) setQty(n);
                   }}
                   keyboardType="decimal-pad"
                   mode="outlined"

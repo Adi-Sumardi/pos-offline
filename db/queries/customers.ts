@@ -35,9 +35,9 @@ export async function getCustomerById(id: number) {
 export async function createCustomer(data: Omit<NewCustomer, 'memberCode'>) {
   const db = getDb();
 
-  // Auto-generate member code
-  const countResult = await db.select({ count: sql<number>`COUNT(*)` }).from(customers);
-  const seq = (countResult[0]?.count ?? 0) + 1;
+  // Auto-generate member code menggunakan MAX(id) agar unik meski ada data yang dihapus
+  const maxResult = await db.select({ maxId: sql<number>`COALESCE(MAX(id), 0)` }).from(customers);
+  const seq = (maxResult[0]?.maxId ?? 0) + 1;
   const memberCode = generateMemberCode(seq);
 
   const [inserted] = await db

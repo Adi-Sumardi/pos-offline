@@ -93,8 +93,29 @@ export default function ProductFormScreen() {
   }
 
   async function handleSave() {
+    const parsedPrice = parseRupiah(price);
+    const parsedStock = parseFloat(stock);
+    const parsedMinStock = parseFloat(minStock);
+    const parsedQtyStep = parseFloat(qtyStep);
+
     if (!name.trim() || !sku.trim() || !price) {
       Alert.alert('Error', 'Nama, SKU, dan Harga wajib diisi');
+      return;
+    }
+    if (parsedPrice <= 0) {
+      Alert.alert('Error', 'Harga jual harus lebih dari 0');
+      return;
+    }
+    if (isNew && (isNaN(parsedStock) || parsedStock < 0)) {
+      Alert.alert('Error', 'Stok awal tidak valid (harus angka ≥ 0)');
+      return;
+    }
+    if (isNaN(parsedMinStock) || parsedMinStock < 0) {
+      Alert.alert('Error', 'Stok minimum tidak valid');
+      return;
+    }
+    if (isNaN(parsedQtyStep) || parsedQtyStep <= 0) {
+      Alert.alert('Error', 'Kelipatan qty tidak valid (harus > 0)');
       return;
     }
     setLoading(true);
@@ -103,13 +124,13 @@ export default function ProductFormScreen() {
         name: name.trim(),
         sku: sku.trim().toUpperCase(),
         brand: brand.trim() || null,
-        price: parseRupiah(price),
+        price: parsedPrice,
         costPrice: parseRupiah(costPrice),
-        stock: parseFloat(stock) || 0,
-        minStock: parseFloat(minStock) || 5,
+        stock: isNaN(parsedStock) ? 0 : parsedStock,
+        minStock: isNaN(parsedMinStock) ? 5 : parsedMinStock,
         unit: unit.trim(),
         unitType,
-        qtyStep: parseFloat(qtyStep) || 1,
+        qtyStep: isNaN(parsedQtyStep) ? 1 : parsedQtyStep,
         location: location.trim() || null,
         notes: notes.trim() || null,
         isActive,

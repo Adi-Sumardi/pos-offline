@@ -2,21 +2,26 @@ import { eq, sql, and, gte, lte } from 'drizzle-orm';
 import { getDb, getSqliteDb } from '../index';
 import {
   transactions, transactionItems, products,
-  customers, cashFlow, stockLogs,
+  customers, cashFlow, stockLogs, debtPayments,
 } from '../schema';
 import type { CartItem } from '@/stores/useCartStore';
 import type { Customer, Discount } from '../schema';
 import { generateTrxCode, todayTrxPrefix } from '@/utils/trxCode';
 
-/** Ambil sequence transaksi hari ini untuk generate kode */
+/**
+ * Ambil sequence transaksi hari ini.
+ * Menggunakan MAX agar aman bila ada data yang dihapus.
+ */
 async function getNextTrxSequence(): Promise<number> {
   const db = getSqliteDb();
   const prefix = todayTrxPrefix();
-  const result = await db.getFirstAsync<{ count: number }>(
-    `SELECT COUNT(*) as count FROM transactions WHERE trx_code LIKE ?`,
+  // Extract 4-digit sequence from end of trx_code (format: TRX-YYYYMMDD-XXXX, pos 14+)
+  const result = await db.getFirstAsync<{ maxSeq: number }>(
+    `SELECT COALESCE(MAX(CAST(SUBSTR(trx_code, 14) AS INTEGER)), 0) as maxSeq
+     FROM transactions WHERE trx_code LIKE ?`,
     [`${prefix}%`]
   );
-  return (result?.count ?? 0) + 1;
+  return (result?.maxSeq ?? 0) + 1;
 }
 
 export interface CheckoutPayload {
@@ -45,10 +50,19 @@ export async function processTransaction(payload: CheckoutPayload) {
   const total = subtotal - discountAmount;
   const changeAmount = paymentType === 'cash' ? amountPaid - total : 0;
 
-  // Validasi stok (gunakan epsilon untuk menghindari floating-point error)
-  const EPSILON = 1e-9;
+  // Validasi: kasir harus punya shift aktif
+  const openShiftRow = await sqlite.getFirstAsync<{ id: number }>(
+    `SELECT id FROM shifts WHERE cashier_id = ? AND status = 'OPEN' LIMIT 1`,
+    [cashierId]
+  );
+  if (!openShiftRow) {
+    throw new Error('Tidak ada shift aktif. Buka shift terlebih dahulu sebelum bertransaksi.');
+  }
+
+  // Validasi stok awal (pre-check, sebelum masuk TX)
   for (const item of items) {
-    if (item.product.stock - item.quantity < -EPSILON) {
+    const remaining = Math.round((item.product.stock - item.quantity) * 10000) / 10000;
+    if (remaining < 0) {
       throw new Error(`Stok "${item.product.name}" tidak cukup (sisa: ${item.product.stock} ${item.product.unit})`);
     }
   }
@@ -68,6 +82,24 @@ export async function processTransaction(payload: CheckoutPayload) {
 
   // Jalankan dalam satu transaksi SQLite
   await sqlite.withTransactionAsync(async () => {
+    // Re-validasi stok di dalam transaksi (defense in depth)
+    for (const item of items) {
+      const currentProduct = await db
+        .select({ stock: products.stock })
+        .from(products)
+        .where(eq(products.id, item.product.id))
+        .limit(1);
+
+      if (!currentProduct[0]) {
+        throw new Error(`Produk "${item.product.name}" tidak ditemukan`);
+      }
+
+      const remaining = Math.round((currentProduct[0].stock - item.quantity) * 10000) / 10000;
+      if (remaining < 0) {
+        throw new Error(`Stok "${item.product.name}" tidak cukup (sisa: ${currentProduct[0].stock} ${item.product.unit})`);
+      }
+    }
+
     // 1. Insert header transaksi
     const [trx] = await db.insert(transactions).values({
       trxCode,
@@ -99,7 +131,7 @@ export async function processTransaction(payload: CheckoutPayload) {
         subtotal: item.subtotal,
       });
 
-      const newStock = item.product.stock - item.quantity;
+      const newStock = Math.round((item.product.stock - item.quantity) * 10000) / 10000;
       await db.update(products).set({ stock: newStock }).where(eq(products.id, item.product.id));
       await db.insert(stockLogs).values({
         productId: item.product.id,
@@ -120,7 +152,6 @@ export async function processTransaction(payload: CheckoutPayload) {
     }
 
     // 4. Cash flow masuk (hanya untuk pembayaran tunai)
-    // Transaksi hutang TIDAK dicatat sebagai kas masuk sampai pelanggan membayar
     if (paymentType === 'cash') {
       await db.insert(cashFlow).values({
         type: 'in',
@@ -198,7 +229,7 @@ export async function voidTransaction(trxId: number, adminId: number, reason: st
     for (const item of items) {
       const prod = await db.select().from(products).where(eq(products.id, item.productId)).limit(1);
       if (prod[0]) {
-        const newStock = prod[0].stock + item.quantity;
+        const newStock = Math.round((prod[0].stock + item.quantity) * 10000) / 10000;
         await db.update(products).set({ stock: newStock }).where(eq(products.id, item.productId));
         await db.insert(stockLogs).values({
           productId: item.productId,
@@ -215,10 +246,21 @@ export async function voidTransaction(trxId: number, adminId: number, reason: st
     // Batalkan hutang jika transaksi hutang
     if (trx[0].paymentType === 'debt' && trx[0].customerId) {
       const cust = await db.select().from(customers).where(eq(customers.id, trx[0].customerId)).limit(1);
-      if (cust[0]) {
+      if (cust[0] && cust[0].debtBalance > 0) {
+        const cancelAmount = Math.min(trx[0].total, cust[0].debtBalance);
+        const newBalance = cust[0].debtBalance - cancelAmount;
+
         await db.update(customers)
-          .set({ debtBalance: Math.max(0, cust[0].debtBalance - trx[0].total) })
+          .set({ debtBalance: newBalance })
           .where(eq(customers.id, trx[0].customerId));
+
+        // Catat audit trail pembatalan hutang
+        await db.insert(debtPayments).values({
+          customerId: trx[0].customerId,
+          cashierId: adminId,
+          amount: -cancelAmount,
+          notes: `VOID: ${trx[0].trxCode} - ${reason}`,
+        });
       }
     }
 

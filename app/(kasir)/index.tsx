@@ -76,17 +76,21 @@ export default function POSScreen() {
   }, []);
 
   async function init() {
-    const [prods, cats, discs, sh] = await Promise.all([
-      getAllProducts(),
-      getDb().select().from(categories),
-      getActiveDiscounts(),
-      getOpenShift(user.id),
-    ]);
-    setProducts(prods as unknown as Product[]);
-    setCatList(cats);
-    setActiveDiscounts(discs as Discount[]);
-    setShift(sh);
-    if (!sh) setShowOpenShift(true);
+    try {
+      const [prods, cats, discs, sh] = await Promise.all([
+        getAllProducts(),
+        getDb().select().from(categories),
+        getActiveDiscounts(),
+        getOpenShift(user.id),
+      ]);
+      setProducts(prods as unknown as Product[]);
+      setCatList(cats);
+      setActiveDiscounts(discs as Discount[]);
+      setShift(sh);
+      if (!sh) setShowOpenShift(true);
+    } catch (e: any) {
+      Alert.alert('Gagal Memuat Data', e.message);
+    }
   }
 
   async function doSearch(q: string, catId: number | null) {
@@ -211,7 +215,12 @@ export default function POSScreen() {
 
   async function handleOpenShift() {
     try {
-      const balance = parseInt(openingBalance.replace(/\./g, '')) || 0;
+      const raw = openingBalance.replace(/\./g, '').trim();
+      const balance = raw === '' ? 0 : parseInt(raw, 10);
+      if (isNaN(balance) || balance < 0) {
+        Alert.alert('Input Tidak Valid', 'Saldo kas awal harus berupa angka yang valid');
+        return;
+      }
       const sh = await openShift(user.id, balance);
       setShift(sh);
       setShowOpenShift(false);
