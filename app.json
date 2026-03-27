@@ -1,0 +1,48 @@
+{
+  "expo": {
+    "name": "Toko Kurnia",
+    "slug": "pos-toko-kurnia",
+    "version": "1.0.0",
+    "orientation": "default",
+    "icon": "./assets/toko-kurnia.png",
+    "userInterfaceStyle": "light",
+    "scheme": "pos-toko-kurnia",
+    "splash": {
+      "image": "./assets/toko-kurnia.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#FFFFFF"
+    },
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.tokokurnia.pos"
+    },
+    "android": {
+      "adaptiveIcon": {
+        "backgroundColor": "#FFFFFF",
+        "foregroundImage": "./assets/toko-kurnia.png",
+        "monochromeImage": "./assets/toko-kurnia.png"
+      },
+      "package": "com.tokokurnia.pos",
+      "permissions": [
+        "android.permission.CAMERA",
+        "android.permission.BLUETOOTH",
+        "android.permission.BLUETOOTH_ADMIN",
+        "android.permission.BLUETOOTH_CONNECT"
+      ]
+    },
+    "web": {
+      "favicon": "./assets/toko-kurnia.png"
+    },
+    "plugins": [
+      "expo-router",
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "Izinkan POS Toko Kurnia mengakses kamera untuk scan QR/barcode produk."
+        }
+      ],
+      "expo-asset",
+      "expo-font"
+    ]
+  }
+}

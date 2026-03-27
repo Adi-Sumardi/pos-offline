@@ -1,0 +1,128 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<coverage generated="1774529015987" clover="3.2.0">
+  <project timestamp="1774529015988" name="All files">
+    <metrics statements="101" coveredstatements="99" conditionals="30" coveredconditionals="29" methods="38" coveredmethods="36" elements="169" coveredelements="164" complexity="0" loc="101" ncloc="101" packages="2" files="5" classes="5"/>
+    <package name="stores">
+      <metrics statements="51" coveredstatements="49" conditionals="19" coveredconditionals="18" methods="22" coveredmethods="20"/>
+      <file name="useAuthStore.ts" path="/Users/yapi/Adi/appdev/pos-offline/stores/useAuthStore.ts">
+        <metrics statements="7" coveredstatements="5" conditionals="0" coveredconditionals="0" methods="5" coveredmethods="3"/>
+        <line num="1" count="1" type="stmt"/>
+        <line num="11" count="1" type="stmt"/>
+        <line num="16" count="5" type="stmt"/>
+        <line num="22" count="6" type="stmt"/>
+        <line num="31" count="1" type="stmt"/>
+        <line num="32" count="0" type="stmt"/>
+        <line num="33" count="0" type="stmt"/>
+      </file>
+      <file name="useCartStore.ts" path="/Users/yapi/Adi/appdev/pos-offline/stores/useCartStore.ts">
+        <metrics statements="44" coveredstatements="44" conditionals="19" coveredconditionals="18" methods="17" coveredmethods="17"/>
+        <line num="1" count="1" type="stmt"/>
+        <line num="32" count="1" type="stmt"/>
+        <line num="40" count="38" type="stmt"/>
+        <line num="41" count="38" type="stmt"/>
+        <line num="43" count="38" type="cond" truecount="2" falsecount="0"/>
+        <line num="45" count="1" type="stmt"/>
+        <line num="46" count="1" type="stmt"/>
+        <line num="47" count="1" type="stmt"/>
+        <line num="52" count="1" type="stmt"/>
+        <line num="55" count="37" type="stmt"/>
+        <line num="67" count="38" type="stmt"/>
+        <line num="71" count="5" type="stmt"/>
+        <line num="72" count="4" type="stmt"/>
+        <line num="76" count="4" type="cond" truecount="2" falsecount="0"/>
+        <line num="77" count="2" type="stmt"/>
+        <line num="78" count="2" type="stmt"/>
+        <line num="80" count="2" type="stmt"/>
+        <line num="81" count="1" type="cond" truecount="1" falsecount="1"/>
+        <line num="89" count="2" type="stmt"/>
+        <line num="90" count="2" type="stmt"/>
+        <line num="93" count="1" type="stmt"/>
+        <line num="96" count="15" type="stmt"/>
+        <line num="97" count="15" type="stmt"/>
+        <line num="100" count="1" type="stmt"/>
+        <line num="103" count="35" type="stmt"/>
+        <line num="111" count="24" type="stmt"/>
+        <line num="113" count="5" type="stmt"/>
+        <line num="115" count="2" type="stmt"/>
+        <line num="119" count="59" type="stmt"/>
+        <line num="120" count="59" type="cond" truecount="2" falsecount="0"/>
+        <line num="121" count="43" type="stmt"/>
+        <line num="122" count="43" type="stmt"/>
+        <line num="124" count="16" type="stmt"/>
+        <line num="127" count="16" type="cond" truecount="2" falsecount="0"/>
+        <line num="128" count="3" type="stmt"/>
+        <line num="129" count="3" type="stmt"/>
+        <line num="132" count="13" type="stmt"/>
+        <line num="133" count="13" type="cond" truecount="2" falsecount="0"/>
+        <line num="134" count="9" type="stmt"/>
+        <line num="135" count="9" type="cond" truecount="4" falsecount="0"/>
+        <line num="136" count="1" type="stmt"/>
+        <line num="139" count="4" type="stmt"/>
+        <line num="143" count="13" type="cond" truecount="2" falsecount="0"/>
+        <line num="145" count="13" type="stmt"/>
+      </file>
+    </package>
+    <package name="utils">
+      <metrics statements="50" coveredstatements="50" conditionals="11" coveredconditionals="11" methods="16" coveredmethods="16"/>
+      <file name="currency.ts" path="/Users/yapi/Adi/appdev/pos-offline/utils/currency.ts">
+        <metrics statements="9" coveredstatements="9" conditionals="4" coveredconditionals="4" methods="4" coveredmethods="4"/>
+        <line num="5" count="1" type="stmt"/>
+        <line num="6" count="6" type="stmt"/>
+        <line num="13" count="1" type="stmt"/>
+        <line num="14" count="3" type="stmt"/>
+        <line num="21" count="1" type="stmt"/>
+        <line num="22" count="8" type="cond" truecount="2" falsecount="0"/>
+        <line num="29" count="1" type="stmt"/>
+        <line num="30" count="8" type="cond" truecount="2" falsecount="0"/>
+        <line num="31" count="8" type="stmt"/>
+      </file>
+      <file name="date.ts" path="/Users/yapi/Adi/appdev/pos-offline/utils/date.ts">
+        <metrics statements="27" coveredstatements="27" conditionals="7" coveredconditionals="7" methods="8" coveredmethods="8"/>
+        <line num="1" count="1" type="stmt"/>
+        <line num="2" count="1" type="stmt"/>
+        <line num="3" count="1" type="stmt"/>
+        <line num="4" count="1" type="stmt"/>
+        <line num="6" count="1" type="stmt"/>
+        <line num="7" count="1" type="stmt"/>
+        <line num="8" count="1" type="stmt"/>
+        <line num="10" count="1" type="cond" truecount="1" falsecount="0"/>
+        <line num="11" count="7" type="cond" truecount="2" falsecount="0"/>
+        <line num="12" count="5" type="stmt"/>
+        <line num="15" count="1" type="stmt"/>
+        <line num="16" count="2" type="cond" truecount="2" falsecount="0"/>
+        <line num="17" count="1" type="stmt"/>
+        <line num="20" count="1" type="stmt"/>
+        <line num="21" count="2" type="cond" truecount="2" falsecount="0"/>
+        <line num="22" count="1" type="stmt"/>
+        <line num="25" count="1" type="stmt"/>
+        <line num="26" count="1" type="stmt"/>
+        <line num="29" count="1" type="stmt"/>
+        <line num="30" count="1" type="stmt"/>
+        <line num="33" count="1" type="stmt"/>
+        <line num="34" count="1" type="stmt"/>
+        <line num="37" count="1" type="stmt"/>
+        <line num="38" count="1" type="stmt"/>
+        <line num="41" count="1" type="stmt"/>
+        <line num="42" count="1" type="stmt"/>
+        <line num="45" count="1" type="stmt"/>
+      </file>
+      <file name="trxCode.ts" path="/Users/yapi/Adi/appdev/pos-offline/utils/trxCode.ts">
+        <metrics statements="14" coveredstatements="14" conditionals="0" coveredconditionals="0" methods="4" coveredmethods="4"/>
+        <line num="1" count="1" type="stmt"/>
+        <line num="7" count="1" type="stmt"/>
+        <line num="8" count="8" type="stmt"/>
+        <line num="9" count="8" type="stmt"/>
+        <line num="10" count="8" type="stmt"/>
+        <line num="17" count="1" type="stmt"/>
+        <line num="18" count="5" type="stmt"/>
+        <line num="19" count="5" type="stmt"/>
+        <line num="26" count="1" type="stmt"/>
+        <line num="27" count="11" type="stmt"/>
+        <line num="31" count="11" type="stmt"/>
+        <line num="32" count="11" type="stmt"/>
+        <line num="39" count="1" type="stmt"/>
+        <line num="40" count="2" type="stmt"/>
+      </file>
+    </package>
+  </project>
+</coverage>
